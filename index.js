@@ -34,6 +34,19 @@ var logger = winston.createLogger({
     ]
 });
 
+function estimate(v) {
+    let r = '';
+    if (v < 0) {
+        r = '-';
+        v = -v;
+    }
+    for (let i = 0; i < 3; i++) {
+        v = v * 10;
+        r = r + (v | 0);
+    }
+    return r;
+}
+
 async function run() {
     const a = ai.create(SIZE);
     const b = ai.create(SIZE);
@@ -46,7 +59,8 @@ async function run() {
         for (let j = 0; j < (SIZE * SIZE) / 2; j++) {
             let player = 1;
             let s = null;
-            let m = await a.move(board, player);
+            let e = [];
+            let m = await a.move(board, player, e);
             if (m === null) {
                 utils.dump(board, SIZE);
                 return;
@@ -59,6 +73,9 @@ async function run() {
                 utils.dump(board, SIZE);
                 break;
             }
+            if (e.length > 0) {
+                r = r + estimate(e[0]);
+            }
             r = r + utils.formatMove(m, SIZE);
             if (s.length > 0) {
                 w++;
@@ -69,7 +86,8 @@ async function run() {
             }
             player = -1;
             s = null;
-            m = await b.move(board, player);
+            e = [];
+            m = await b.move(board, player, e);
             if (m === null) {
                 utils.dump(board, SIZE);
                 return;
@@ -81,6 +99,9 @@ async function run() {
                 logger.info('Won [2]: ' + r);
                 utils.dump(board, SIZE);
                 break;
+            }
+            if (e.length > 0) {
+                r = r + estimate(e[0]);
             }
             r = r + utils.formatMove(m, SIZE);
             if (s.length > 0) {
